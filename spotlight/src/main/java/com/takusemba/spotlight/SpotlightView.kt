@@ -8,10 +8,12 @@ import android.animation.ValueAnimator.AnimatorUpdateListener
 import android.animation.ValueAnimator.INFINITE
 import android.animation.ValueAnimator.ofFloat
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
@@ -20,6 +22,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
+import com.takusemba.spotlight.blur.BlurEngine
 import com.takusemba.spotlight.overlay.FullScreenOverlay
 import com.takusemba.spotlight.overlay.GravityOverlay
 
@@ -30,8 +33,10 @@ internal class SpotlightView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-    @ColorRes backgroundColor: Int = R.color.background
+    @ColorRes backgroundColor: Int = R.color.background,
+    private val withBlurBackground: Boolean = false
 ) : FrameLayout(context, attrs, defStyleAttr) {
+  private val blurEngine = BlurEngine(this)
 
   private val backgroundPaint by lazy {
     Paint().apply { color = ContextCompat.getColor(context, backgroundColor) }
@@ -49,14 +54,40 @@ internal class SpotlightView @JvmOverloads constructor(
   private var effectAnimator: ValueAnimator? = null
   private var target: Target? = null
 
+  private val currentBounds = Rect()
+
+  private var blurredBackground: Bitmap? = null
+  private val computedBlurBounds = Rect()
+
   init {
     setWillNotDraw(false)
     setLayerType(View.LAYER_TYPE_HARDWARE, null)
   }
 
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    if (withBlurBackground) {
+      blurEngine.startProcessing()
+    }
+  }
+
+  override fun onDetachedFromWindow() {
+    super.onDetachedFromWindow()
+
+    if (withBlurBackground) {
+      blurredBackground = null
+      blurEngine.stopProcessing()
+    }
+  }
+
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    currentBounds.set(0, 0, measuredWidth, measuredHeight)
+  }
+
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
-    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
+    drawBackground(canvas)
     val currentTarget = target
     val currentShapeAnimator = shapeAnimator
     val currentEffectAnimator = effectAnimator
@@ -76,6 +107,14 @@ internal class SpotlightView @JvmOverloads constructor(
           paint = shapePaint
       )
     }
+  }
+
+  private fun drawBackground(canvas: Canvas) {
+    val blurredBitmap = blurredBackground
+    if (blurredBitmap != null) {
+      canvas.drawBitmap(blurredBitmap, computedBlurBounds, currentBounds, null)
+    }
+    canvas.drawRect(currentBounds, backgroundPaint)
   }
 
   /**
@@ -174,5 +213,15 @@ internal class SpotlightView @JvmOverloads constructor(
     effectAnimator?.cancel()
     effectAnimator = null
     shapeAnimator?.start()
+  }
+
+  fun setBlurredBackground(computedBlur: Bitmap?) {
+    this.blurredBackground = computedBlur
+    if (computedBlur != null) {
+      computedBlurBounds.set(0, 0, computedBlur.width, computedBlur.height)
+    } else {
+      computedBlurBounds.setEmpty()
+    }
+    invalidate()
   }
 }

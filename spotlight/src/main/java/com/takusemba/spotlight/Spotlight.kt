@@ -148,6 +148,7 @@ class Spotlight private constructor(
     private var duration: Long = DEFAULT_DURATION
     private var interpolator: TimeInterpolator = DEFAULT_ANIMATION
     @ColorRes private var backgroundColor: Int = DEFAULT_OVERLAY_COLOR
+    private var withBackgroundBlur: Boolean = DEFAULT_BLURRED_BACKGROUND
     private var container: ViewGroup? = null
     private var listener: OnSpotlightListener? = null
 
@@ -179,6 +180,10 @@ class Spotlight private constructor(
       this.backgroundColor = backgroundColor
     }
 
+    fun enableBackgroundBlur(enableBackgroundBlur: Boolean): Builder = apply {
+      this.withBackgroundBlur = enableBackgroundBlur
+    }
+
     /**
      * Sets [interpolator] to start/finish [Spotlight].
      */
@@ -202,7 +207,7 @@ class Spotlight private constructor(
 
     fun build(): Spotlight {
 
-      val spotlight = SpotlightView(activity, null, 0, backgroundColor)
+      val spotlight = SpotlightView(activity, null, 0, backgroundColor, withBackgroundBlur)
       val targets = requireNotNull(targets) { "targets should not be null. " }
       val container = container ?: activity.window.decorView as ViewGroup
 
@@ -223,6 +228,8 @@ class Spotlight private constructor(
       private val DEFAULT_ANIMATION = DecelerateInterpolator(2f)
 
       @ColorRes private val DEFAULT_OVERLAY_COLOR = R.color.background
+
+      private const val DEFAULT_BLURRED_BACKGROUND = false
     }
   }
 }

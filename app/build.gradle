@@ -6,6 +6,9 @@ android {
   defaultConfig {
     minSdkVersion configs.minSdkVersion
     targetSdkVersion configs.targetSdkVersion
+
+    renderscriptTargetApi 18
+    renderscriptSupportModeEnabled true
   }
 }
 

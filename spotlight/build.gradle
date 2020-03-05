@@ -8,6 +8,9 @@ android {
     targetSdkVersion configs.targetSdkVersion
     versionCode configs.libraryVersionCode
     versionName configs.libraryVersionName
+
+    renderscriptTargetApi 18
+    renderscriptSupportModeEnabled true
   }
 }
 
