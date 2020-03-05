@@ -1,6 +1,7 @@
 package com.takusemba.spotlight
 
 import android.graphics.PointF
+import android.graphics.RectF
 import android.view.View
 import com.takusemba.spotlight.effet.Effect
 import com.takusemba.spotlight.effet.EmptyEffect
@@ -19,6 +20,8 @@ class Target(
     val overlay: Overlay?,
     val listener: OnTargetListener?
 ) {
+  val bounds: RectF
+    get() = shape.getBounds(anchor)
 
   /**
    * [Builder] to build a [Target].

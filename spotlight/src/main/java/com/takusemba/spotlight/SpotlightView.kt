@@ -16,6 +16,7 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -36,6 +37,7 @@ internal class SpotlightView @JvmOverloads constructor(
     @ColorRes backgroundColor: Int = R.color.background,
     private val withBlurBackground: Boolean = false
 ) : FrameLayout(context, attrs, defStyleAttr) {
+  internal lateinit var spotlight: Spotlight
   private val blurEngine = BlurEngine(this)
 
   private val backgroundPaint by lazy {
@@ -62,6 +64,9 @@ internal class SpotlightView @JvmOverloads constructor(
   init {
     setWillNotDraw(false)
     setLayerType(View.LAYER_TYPE_HARDWARE, null)
+    isClickable = true
+    isFocusable = true
+    isFocusableInTouchMode = true
   }
 
   override fun onAttachedToWindow() {
@@ -223,5 +228,16 @@ internal class SpotlightView @JvmOverloads constructor(
       computedBlurBounds.setEmpty()
     }
     invalidate()
+  }
+
+  override fun onTouchEvent(event: MotionEvent): Boolean {
+    if (target?.bounds?.contains(event.x, event.y) == true) {
+      return false
+    } else {
+      if (event.action == MotionEvent.ACTION_UP) {
+        spotlight.next()
+      }
+      return super.onTouchEvent(event)
+    }
   }
 }

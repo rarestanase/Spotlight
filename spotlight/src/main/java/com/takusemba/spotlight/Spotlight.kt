@@ -218,7 +218,9 @@ class Spotlight private constructor(
           interpolator = interpolator,
           container = container,
           spotlightListener = listener
-      )
+      ).apply {
+        spotlight.spotlight = this
+      }
     }
 
     companion object {
