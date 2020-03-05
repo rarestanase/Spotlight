@@ -151,6 +151,7 @@ class Spotlight private constructor(
     private var withBackgroundBlur: Boolean = DEFAULT_BLURRED_BACKGROUND
     private var container: ViewGroup? = null
     private var listener: OnSpotlightListener? = null
+    private var elevation: Float? = null
 
     /**
      * Sets [Target]s to show on [Spotlight].
@@ -205,6 +206,10 @@ class Spotlight private constructor(
       this.listener = listener
     }
 
+    fun setElevation(elevation: Float?): Builder = apply {
+      this.elevation = elevation
+    }
+
     fun build(): Spotlight {
 
       val spotlight = SpotlightView(activity, null, 0, backgroundColor, withBackgroundBlur)
@@ -220,6 +225,7 @@ class Spotlight private constructor(
           spotlightListener = listener
       ).apply {
         spotlight.spotlight = this
+        elevation?.let { spotlight.elevation = it  }
       }
     }
 
