@@ -4,6 +4,8 @@ import android.graphics.PointF
 import android.view.View
 import com.takusemba.spotlight.effet.Effect
 import com.takusemba.spotlight.effet.EmptyEffect
+import com.takusemba.spotlight.overlay.FullScreenOverlay
+import com.takusemba.spotlight.overlay.Overlay
 import com.takusemba.spotlight.shape.Circle
 import com.takusemba.spotlight.shape.Shape
 
@@ -14,7 +16,7 @@ class Target(
     val anchor: PointF,
     val shape: Shape,
     val effect: Effect,
-    val overlay: View?,
+    val overlay: Overlay?,
     val listener: OnTargetListener?
 ) {
 
@@ -27,7 +29,7 @@ class Target(
     private var anchor: PointF = DEFAULT_ANCHOR
     private var shape: Shape = DEFAULT_SHAPE
     private var effect: Effect = DEFAULT_EFFECT
-    private var overlay: View? = null
+    private var overlay: Overlay? = null
     private var listener: OnTargetListener? = null
 
     /**
@@ -73,6 +75,10 @@ class Target(
      * Sets [overlay] to be laid out to describe [Target].
      */
     fun setOverlay(overlay: View): Builder = apply {
+      this.overlay = FullScreenOverlay(overlay)
+    }
+
+    fun setOverlay(overlay: Overlay): Builder = apply {
       this.overlay = overlay
     }
 

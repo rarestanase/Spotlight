@@ -13,11 +13,15 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
+import com.takusemba.spotlight.overlay.FullScreenOverlay
+import com.takusemba.spotlight.overlay.GravityOverlay
 
 /**
  * [SpotlightView] starts/finishes [Spotlight], and starts/finishes a current [Target].
@@ -111,7 +115,14 @@ internal class SpotlightView @JvmOverloads constructor(
    */
   fun startTarget(target: Target, listener: Animator.AnimatorListener) {
     removeAllViews()
-    addView(target.overlay, MATCH_PARENT, MATCH_PARENT)
+    when (target.overlay) {
+      is FullScreenOverlay -> {
+        addView(target.overlay.view, MATCH_PARENT, MATCH_PARENT)
+      }
+      is GravityOverlay -> {
+        addGravityOverlay(target, target.overlay)
+      }
+    }
     this.target = target
     this.shapeAnimator = ofFloat(0f, 1f).apply {
       duration = target.shape.duration
@@ -129,6 +140,23 @@ internal class SpotlightView @JvmOverloads constructor(
     }
     shapeAnimator?.start()
     effectAnimator?.start()
+  }
+
+  private fun addGravityOverlay(target: Target, overlay: GravityOverlay) {
+    val layoutParams = when (overlay.gravity) {
+      GravityOverlay.Gravity.BOTTOM -> {
+        FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.TOP).apply {
+          topMargin = (target.shape.getBounds(target.anchor).bottom + overlay.margin).toInt()
+        }
+      }
+      GravityOverlay.Gravity.TOP -> {
+        val containerHeight = height
+        FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.BOTTOM).apply {
+          bottomMargin = (containerHeight - target.shape.getBounds(target.anchor).top - overlay.margin).toInt()
+        }
+      }
+    }
+    addView(overlay.view, layoutParams)
   }
 
   /**
