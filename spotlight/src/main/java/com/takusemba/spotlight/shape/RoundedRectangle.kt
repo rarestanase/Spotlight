@@ -20,14 +20,22 @@ class RoundedRectangle(
 ) : Shape {
 
   override fun draw(canvas: Canvas, point: PointF, value: Float, paint: Paint) {
+    val rect = getBounds(point, value)
+    canvas.drawRoundRect(rect, radius, radius, paint)
+  }
+
+  private fun getBounds(point: PointF, value: Float): RectF {
     val halfWidth = width / 2 * value
     val halfHeight = height / 2 * value
     val left = point.x - halfWidth
     val top = point.y - halfHeight
     val right = point.x + halfWidth
     val bottom = point.y + halfHeight
-    val rect = RectF(left, top, right, bottom)
-    canvas.drawRoundRect(rect, radius, radius, paint)
+    return RectF(left, top, right, bottom)
+  }
+
+  override fun getBounds(anchor: PointF): RectF {
+    return getBounds(anchor, 1.0f)
   }
 
   companion object {
