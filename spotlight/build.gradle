@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.github.dcendents.android-maven'
 
 android {
   compileSdkVersion configs.compileSdkVersion
@@ -13,6 +14,8 @@ android {
     renderscriptSupportModeEnabled true
   }
 }
+
+group = 'com.github.flolom.spotlight'
 
 dependencies {
   implementation deps.kotlin.stdlib
