@@ -9,6 +9,7 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.os.AsyncTask
 import android.view.View
+import android.view.ViewTreeObserver
 import com.takusemba.spotlight.SpotlightView
 import com.takusemba.spotlight.blur.FastBlurHelper.doBlur
 import kotlin.math.ceil
@@ -86,7 +87,7 @@ internal class BlurEngine(
 
     override fun onPreExecute() {
       super.onPreExecute()
-      val backgroundView = mHoldingActivity.getWindow().getDecorView()
+      val backgroundView = mHoldingActivity.window.decorView
       mBackgroundView = backgroundView
       //retrieve background view, must be achieved on ui thread since
       //only the original thread that created a view hierarchy can touch its views.
@@ -143,8 +144,21 @@ internal class BlurEngine(
 
   fun startProcessing() {
     val bluringTask = BlurAsyncTask()
-    mBluringTask = bluringTask
-    bluringTask.execute()
+    if (mHoldingActivity.window.decorView.isShown) {
+      mBluringTask = bluringTask
+      bluringTask.execute()
+    } else {
+      mHoldingActivity.window.decorView.viewTreeObserver.addOnPreDrawListener(
+        object : ViewTreeObserver.OnPreDrawListener {
+          override fun onPreDraw(): Boolean {
+            mHoldingActivity.window.decorView.viewTreeObserver.removeOnPreDrawListener(this)
+            mBluringTask = bluringTask
+            bluringTask.execute()
+            return true
+          }
+        }
+      )
+    }
   }
 
   fun stopProcessing() {
