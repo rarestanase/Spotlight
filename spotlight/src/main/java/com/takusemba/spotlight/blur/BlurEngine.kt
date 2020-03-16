@@ -1,15 +1,21 @@
 package com.takusemba.spotlight.blur
 
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.app.Activity
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.AsyncTask
+import android.os.Build
+import android.util.TypedValue
 import android.view.View
 import android.view.ViewTreeObserver
+import android.view.WindowManager
+import com.takusemba.spotlight.R
 import com.takusemba.spotlight.SpotlightView
 import com.takusemba.spotlight.blur.FastBlurHelper.doBlur
 import kotlin.math.ceil
@@ -36,13 +42,32 @@ internal class BlurEngine(
   private fun blur(bkg: Bitmap, view: View) {
     //overlay used to build scaled preview and blur background
     var overlay: Bitmap? = null
-    //evaluate top offset due to action bar, 0 if the actionBar should be blurred.
 
-    val topOffset = 0
+    //evaluate top offset due to status bar
+    var statusBarHeight = 0
+    if ((mHoldingActivity.window.attributes.flags
+            and WindowManager.LayoutParams.FLAG_FULLSCREEN) == 0) { //not in fullscreen mode
+      statusBarHeight = getStatusBarHeight()
+    }
+
+    // check if status bar is translucent to remove status bar offset in order to provide blur
+    // on content bellow the status.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isStatusBarTranslucent()) {
+      statusBarHeight = 0
+    }
+
+    val topOffset = statusBarHeight
     // evaluate bottom or right offset due to navigation bar.
     var bottomOffset = 0
     var rightOffset = 0
-    val navBarSize: Int = 0
+    val navBarSize = getNavigationBarOffset()
+
+    if (mHoldingActivity.resources.getBoolean(R.bool.blur_dialog_has_bottom_navigation_bar)) {
+      bottomOffset = navBarSize
+    } else {
+      rightOffset = navBarSize
+    }
+
     //add offset to the source boundaries since we don't want to blur actionBar pixels
     val srcRect = Rect(
         0,
@@ -164,6 +189,55 @@ internal class BlurEngine(
   fun stopProcessing() {
     mBluringTask?.cancel(true)
     mBluringTask = null
+  }
+  /**
+   * retrieve status bar height in px
+   *
+   * @return status bar height in px
+   */
+  private fun getStatusBarHeight(): Int {
+    var result = 0
+    val resourceId = mHoldingActivity.resources
+        .getIdentifier("status_bar_height", "dimen", "android")
+    if (resourceId > 0) {
+      result = mHoldingActivity.resources.getDimensionPixelSize(resourceId)
+    }
+    return result
+  }
+
+  /**
+   * Retrieve offset introduce by the navigation bar.
+   *
+   * @return bottom offset due to navigation bar.
+   */
+  private fun getNavigationBarOffset(): Int {
+    var result = 0
+    val resources: Resources = mHoldingActivity.resources
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      val resourceId: Int = resources.getIdentifier("navigation_bar_height", "dimen", "android")
+      if (resourceId > 0) {
+        result = resources.getDimensionPixelSize(resourceId)
+      }
+    }
+    return result
+  }
+
+  /**
+   * Used to check if the status bar is translucent.
+   *
+   * @return true if the status bar is translucent.
+   */
+  @TargetApi(Build.VERSION_CODES.KITKAT)
+  private fun isStatusBarTranslucent(): Boolean {
+    val typedValue = TypedValue()
+    val attribute = intArrayOf(android.R.attr.windowTranslucentStatus)
+    val array = mHoldingActivity.obtainStyledAttributes(
+        typedValue.resourceId,
+        attribute
+    )
+    val isStatusBarTranslucent = array.getBoolean(0, false)
+    array.recycle()
+    return isStatusBarTranslucent
   }
 
   companion object {
