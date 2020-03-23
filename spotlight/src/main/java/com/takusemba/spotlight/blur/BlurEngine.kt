@@ -3,6 +3,7 @@ package com.takusemba.spotlight.blur
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.Activity
+import android.content.Context.WINDOW_SERVICE
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -12,10 +13,12 @@ import android.graphics.RectF
 import android.os.AsyncTask
 import android.os.Build
 import android.util.TypedValue
+import android.view.Surface.ROTATION_0
+import android.view.Surface.ROTATION_270
+import android.view.Surface.ROTATION_90
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.WindowManager
-import com.takusemba.spotlight.R
 import com.takusemba.spotlight.SpotlightView
 import com.takusemba.spotlight.blur.FastBlurHelper.doBlur
 import kotlin.math.ceil
@@ -60,17 +63,20 @@ internal class BlurEngine(
     // evaluate bottom or right offset due to navigation bar.
     var bottomOffset = 0
     var rightOffset = 0
+    var leftOffset = 0
     val navBarSize = getNavigationBarOffset()
 
-    if (mHoldingActivity.resources.getBoolean(R.bool.blur_dialog_has_bottom_navigation_bar)) {
-      bottomOffset = navBarSize
-    } else {
-      rightOffset = navBarSize
+    when (getScreenRotation()) {
+      ROTATION_0 -> bottomOffset = navBarSize
+      ROTATION_90 -> rightOffset = navBarSize
+      ROTATION_270 -> leftOffset = navBarSize
     }
+
+
 
     //add offset to the source boundaries since we don't want to blur actionBar pixels
     val srcRect = Rect(
-        0,
+        leftOffset,
         topOffset,
         bkg.width - rightOffset,
         bkg.height - bottomOffset
@@ -79,7 +85,7 @@ internal class BlurEngine(
     //add the offset to the overlay.
     val height = ceil(
         (view.height - topOffset - bottomOffset) / mDownScaleFactor)
-    val width = ceil((view.width - rightOffset) * height
+    val width = ceil((view.width - rightOffset - leftOffset) * height
         / (view.height - topOffset - bottomOffset))
     // Render script doesn't work with RGB_565
     overlay = if (mUseRenderScript) {
@@ -101,6 +107,12 @@ internal class BlurEngine(
     } else {
       doBlur(overlay, mBlurRadius, true)
     }
+  }
+
+  private fun getScreenRotation(): Int {
+    return (spotlightView.context.getSystemService(WINDOW_SERVICE) as WindowManager)
+        .defaultDisplay
+        .rotation
   }
 
   /**
