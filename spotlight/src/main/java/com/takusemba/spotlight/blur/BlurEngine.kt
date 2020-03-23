@@ -72,8 +72,6 @@ internal class BlurEngine(
       ROTATION_270 -> leftOffset = navBarSize
     }
 
-
-
     //add offset to the source boundaries since we don't want to blur actionBar pixels
     val srcRect = Rect(
         leftOffset,
@@ -254,7 +252,7 @@ internal class BlurEngine(
 
   companion object {
     const val DEFAULT_BLUR_DOWN_SCALE_FACTOR = 4.0f
-    const val DEFAULT_BLUR_RADIUS = 8
+    const val DEFAULT_BLUR_RADIUS = 2
     const val DEFAULT_USE_RENDERSCRIPT = false
   }
 }
