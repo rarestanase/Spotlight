@@ -126,6 +126,7 @@ class Spotlight private constructor(
   private fun finishSpotlight() {
     spotlight.finishSpotlight(duration, interpolator, object : AnimatorListenerAdapter() {
       override fun onAnimationEnd(animation: Animator) {
+        spotlight.clearBackground() // Prevents flickering when removing view
         spotlight.removeAllViews()
         container.removeView(spotlight)
         spotlightListener?.onEnded()

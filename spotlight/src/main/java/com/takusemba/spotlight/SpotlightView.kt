@@ -40,9 +40,7 @@ internal class SpotlightView @JvmOverloads constructor(
   internal lateinit var spotlight: Spotlight
   private val blurEngine = BlurEngine(this)
 
-  private val backgroundPaint by lazy {
-    Paint().apply { color = ContextCompat.getColor(context, backgroundColor) }
-  }
+  private var backgroundPaint = Paint().apply { color = ContextCompat.getColor(context, backgroundColor) }
 
   private val shapePaint by lazy {
     Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) }
@@ -67,6 +65,12 @@ internal class SpotlightView @JvmOverloads constructor(
     isClickable = true
     isFocusable = true
     isFocusableInTouchMode = true
+  }
+
+  fun clearBackground() {
+    backgroundPaint = Paint().apply { color = ContextCompat.getColor(context, android.R.color.transparent) }
+    blurredBackground = null
+    target = null
   }
 
   override fun onAttachedToWindow() {
